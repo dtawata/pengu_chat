@@ -1,0 +1,21 @@
+.form {
+  display: flex;
+  width: 100%;
+}
+
+.form_input {
+  width: 100%;
+  padding: 10px;
+  background-color: #696969;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 300;
+  letter-spacing: 1px;
+  outline: none;
+}
+
+.form_button {
+  width: 0%;
+}
