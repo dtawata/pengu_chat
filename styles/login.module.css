@@ -50,15 +50,18 @@
   background-color: #7750b6;
 }
 
-.already {
+.register {
   margin-top: 8px;
   font-size: 14px;
   text-align: center;
 }
 
-.already span {
+.register span {
   color: #7750b6;
   cursor: pointer;
   font-weight: 700;
+}
+
+.register span:hover {
   text-decoration: underline;
 }
