@@ -4,9 +4,11 @@ USE slack;
 
 CREATE TABLE users (
   id INT NOT NULL auto_increment,
-  email VARCHAR(255) NOT NULL,
-  username VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  username VARCHAR(255) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
+  fname VARCHAR(255),
+  lname VARCHAR(255),
   PRIMARY KEY(id)
 );
 

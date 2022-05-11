@@ -5,7 +5,15 @@ import MessageInput from '../components/MessageInput';
 const Home = (props) => {
   const { messages } = props;
   return (
-    <div>
+    <div className={styles.container}>
+      <div className={styles.namespaces}>
+
+      </div>
+      <div className={styles.rooms}>
+        <div className={styles.room}>general</div>
+        <div className={styles.room}>general</div>
+        <div className={styles.room}>general</div>
+      </div>
       <div className={styles.main}>
         <Messages messages={messages} />
         <MessageInput />
