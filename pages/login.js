@@ -1,9 +1,11 @@
 import styles from '../styles/login.module.css';
-import { useRef } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { signIn, getSession } from 'next-auth/react';
+import router from 'next/router';
 
 const Login = (props) => {
+  const [loginError, setLoginError] = useState(null);
   const emailRef = useRef();
   const passwordRef = useRef();
 
@@ -11,13 +13,20 @@ const Login = (props) => {
     e.preventDefault();
     const email = emailRef.current.value;
     const password = passwordRef.current.value;
-    const user = { email, password };
-    signIn('credentials', user);
+    const user = { redirect: false, email, password };
+    const result = await signIn('credentials', user);
+    if (!result.error) {
+      router.replace('/chat');
+    } else {
+      console.log(result.error);
+      setLoginError(result.error);
+    }
   };
 
   return (
     <div className={styles.login}>
       <h2 className={styles.title}>Welcome back!</h2>
+      {loginError && <div className={styles.login_error}>{loginError}</div>}
       <form onSubmit={handleSubmit} className={styles.form}>
         <input type='email' placeholder='Email' ref={emailRef} required />
         <input type='password' placeholder='Password' ref={passwordRef} required />
@@ -35,7 +44,7 @@ export const getServerSideProps = async (context) => {
   if (session) {
     return {
       redirect: {
-        destination: '/',
+        destination: '/chat',
         permanent: false
       }
     }

@@ -16,14 +16,15 @@ const Register = (props) => {
       e.preventDefault();
       const email = emailRef.current.value;
       const username = usernameRef.current.value;
+      const personal = usernameRef.current.value;
       const fname = fnameRef.current.value;
       const lname = lnameRef.current.value;
       const password = passwordRef.current.value;
-      const user = { email, username, password, fname, lname };
+      const user = { email, username, password, fname, lname, personal };
       const res = await axios.post('http://localhost:3000/api/auth/register', user);
       signIn('credentials', { email, password });
     } catch(error) {
-      console.log(error.response.data.message);
+      console.log('error', error.response.data.message);
     }
   };
 
@@ -50,7 +51,7 @@ export const getServerSideProps = async (context) => {
   if (session) {
     return {
       redirect: {
-        destination: '/',
+        destination: '/chat',
         permanent: false
       }
     }

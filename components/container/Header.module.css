@@ -1,0 +1,44 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 30px 10px 20px 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.logo {
+  width: 20%;
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.nav {
+  width: 40%;
+}
+
+.nav ul {
+  display: flex;
+  align-items: center;
+  list-style: none;
+}
+
+.nav li {
+  margin: 0 15px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.utility {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  width: 20%;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 400;
+  letter-spacing: 1px;
+}

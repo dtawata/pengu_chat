@@ -1,12 +1,15 @@
-.messages {}
-
-.profile {
-  border-radius: 50%;
+.messages {
+  height: 92%;
+  overflow-y: scroll;
 }
 
 .message {
-  margin-bottom: 20px;
   display: flex;
+  margin-bottom: 20px;
+}
+
+.profile {
+  border-radius: 50%;
 }
 
 .content {
@@ -25,8 +28,8 @@
 
 .header_date {
   margin: 1px 0 0 8px;
-  font-size: 12px;
   color: #ddd;
+  font-size: 12px;
 }
 
 .text {

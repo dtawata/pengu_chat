@@ -1,19 +1,22 @@
-import { connection } from '../../../lib/db';
-import { hashPassword } from '../../../lib/auth';
+import { addUser, addRoom, addJoinedRoom } from '../../../lib/db';
 
-const handler = async (req, res) => {
+
+const Handler = async (req, res) => {
   try {
-    const { email, username, password, fname, lname } = req.body;
-    const hashedPassword = await hashPassword(password);
-    const queryString = 'insert into users (email, username, password, fname, lname) values ?';
-    const queryArgs = [[[email, username, hashedPassword, fname, lname]]];
-    const data = await connection.promise().query(queryString, queryArgs);
-    console.log(data);
+    const attempt = await addUser(req.body);
+    const attempt2 = await addRoom({ name: req.body.username, namespace_id: 1 });
+    // const attempt3 = await addJoinedRoom({
+    //   user_id: attempt.insertId,
+    //   room_id: attempt2.insertId
+    // });
+    const attempt4 = await addJoinedRoom({
+      user_id: attempt.insertId,
+      room_id: 1
+    });
     res.send('success!');
   } catch(error) {
-    // console.log(error);
     res.status(500).send(error);
   }
 };
 
-export default handler;
+export default Handler;
