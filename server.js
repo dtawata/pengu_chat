@@ -4,10 +4,16 @@ const { Server } = require('socket.io');
 const server = app.listen(3001);
 const io = new Server(server, {
   cors: {
-    origin: 'http://localhost:3000'
+    origin: true
   }
 });
-const { getUsers, getRooms, addMessage, addPersonalMessage } = require('./lib/db_server');
+const { getUsers, getRooms, addMessage, addPersonalMessage, getNamespaces, getBaseRooms, getJoinedRooms  } = require('./lib/db_server');
+
+// const userIO = io.of('/user');
+
+// userIO.on('connection', () => {
+//   console.log('hello!!!!!')
+// })
 
 // Middleware
 io.use((socket, next) => {
@@ -23,8 +29,24 @@ io.use((socket, next) => {
 
 // Connection
 io.on('connection', async (socket) => {
+  // const userIO = io.of('/user');
+
+  // userIO.on('connection', () => {
+  //   console.log('hello!!!!!')
+  // })
+
+  // const namespaces = await getNamespaces(socket.userId);
+  // for (let i = 0; i < namespaces.length; i++) {
+  //   io.of(`${namespaces[i].path}`).on('connection', (socket) => {
+  //     console.log(`Hello ${socket.id}`);
+  //   })
+  // }
+  // socket.emit('namespaces', namespaces);
   socket.join(socket.username);
-  const rooms = await getRooms(socket.userId);
+  // const ns = await getBaseRooms();
+  // const ns = await getNamespaces(socket.userId);
+
+  const rooms = await getJoinedRooms(socket.userId);
   for (let room of rooms) {
     socket.join(room.name);
   }
@@ -47,22 +69,24 @@ io.on('connection', async (socket) => {
   socket.emit('onlineUsers', onlineUsers);
 
   socket.on('disconnecting', () => {
-    console.log('bye bye')
     socket.broadcast.emit('something', socket.username);
   })
   // add socket.on disconnect
 
-  socket.on('sending', async ({ message, room }) => {
-    const wait = await addMessage(socket.userId, room.id, message);
-    io.to(room.name).emit('receiving', {
+  socket.on('sending', async ({ message, room, channel }) => {
+    const wait = await addMessage(socket.userId, room.id, channel.id, message);
+    // io.to(room.name).emit('receiving', {
+    io.emit('receiving', {
       id: wait.insertId,
       content: message,
       created_at: 'yesterday at 2:30 PM',
       image: '/img/kier-in-sight-2iy6ohGsGAc-unsplash.jpg',
       room_id: room.id,
-      room: room.name,
+      room: room.path,
       user_id: socket.userId,
-      username: socket.username
+      username: socket.username,
+      channel_id: channel.id,
+      channel: channel.name
     });
   });
 
@@ -92,6 +116,11 @@ io.on('connection', async (socket) => {
 
 });
 
+// const io2 = new Server(server, {
+//   cors: {
+//     origin: true
+//   }
+// });
 
 
 

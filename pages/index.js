@@ -28,8 +28,16 @@ const Home = (props) => {
           <li># toy-problems</li>
         </ul>
       </div>
-      <div className={styles.main}>Main</div>
-      <div className={styles.online}>Online</div>
+      <div className={styles.right}>
+        <div className={styles.bar}># general</div>
+        <div className={styles.content}>
+          <div className={styles.main}>
+            <div className={styles.history}></div>
+            <div className={styles.messageInput}></div>
+          </div>
+          <div className={styles.online}></div>
+        </div>
+      </div>
     </div>
   );
 };

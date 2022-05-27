@@ -1,0 +1,38 @@
+
+/* GROUP START */
+.group {
+  width: 22%;
+  background-color: #444;
+}
+
+.group_title {
+  padding: 20px 10px 10px 10px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-bottom: 2px solid #3A3A3A;
+}
+
+.rooms {
+  padding: 10px 15px 0 15px;
+  list-style: none;
+}
+
+.rooms li {
+  cursor: pointer;
+  padding: 10px 7px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: #ddd;
+}
+
+.active {
+  background-color: rgb(38, 38, 38);
+  /* background-color: #3A3A3A; */
+
+  color: #fff;
+  font-weight: 700;
+  border-radius: 4px;
+}
+
+/* GROUP END */

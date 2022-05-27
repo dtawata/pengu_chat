@@ -1,26 +1,26 @@
 import styles from '../styles/Chat.module.css';
 import { useState, useRef, useEffect } from 'react';
 import { getSession } from 'next-auth/react';
-import { io } from 'socket.io-client';
-import axios from 'axios';
+import { io } from 'socket.io-client'; // got it
+import axios from 'axios'; // got it
 import { getUser } from '../lib/db';
 import Conversation from '../components/conversation/Conversation';
 import Rooms from '../components/rooms/Rooms';
 import Users from '../components/users/Users';
 
 const Chat = (props) => {
-  const { session, user } = props;
-  const history = useRef({});
-  const [conversation, setConversation] = useState([]);
-  const [socket, setSocket] = useState(null);
-  const [rooms, setRooms] = useState([]);
-  const room = useRef({ id: 1, name: 'lobby' });
-  const isPrivate = useRef(false);
+  const { session, user } = props; // got it
+  const history = useRef({}); // got it
+  const [conversation, setConversation] = useState([]); // got it
+  const [socket, setSocket] = useState(null); // got it
+  const [rooms, setRooms] = useState([]); // got it
+  const room = useRef({ id: 1, name: 'lobby' }); // got it
+  const isPrivate = useRef(false); // got it
   const [users, setUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const onlineUsersRef = useRef([]);
-  const messagesRef = useRef();
-  const messageRef = useRef();
+  const messagesRef = useRef(); // got it
+  const messageRef = useRef(); // got it
   const [counter, setCounter] = useState(200);
 
   useEffect(() => {

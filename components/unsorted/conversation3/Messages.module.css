@@ -1,0 +1,40 @@
+.messages {
+  height: 92%;
+  overflow-y: scroll;
+}
+
+.message {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.profile {
+  border-radius: 50%;
+}
+
+.content {
+  margin-left: 10px;
+}
+
+.header {
+  display: flex;
+  align-items: baseline;
+}
+
+.header_username {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.header_date {
+  margin: 1px 0 0 8px;
+  color: #ddd;
+  font-size: 12px;
+}
+
+.text {
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 0.5px;
+  line-height: 1.6;
+}
