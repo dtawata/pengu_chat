@@ -1,42 +1,90 @@
-import styles from '../styles/Chat.module.css';
+import styles from '../styles/Chat2.module.css';
+import Rooms from '../components/rooms/Rooms';
+import Channels from '../components/channels/Channels';
+import Conversation from '../components/conversation/Conversation';
+import axios from 'axios';
+import Users from '../components/users/Users';
 import { useState, useRef, useEffect } from 'react';
 import { getSession } from 'next-auth/react';
-import { io } from 'socket.io-client'; // got it
-import axios from 'axios'; // got it
 import { getUser } from '../lib/db';
-import Conversation from '../components/conversation/Conversation';
-import Rooms from '../components/rooms/Rooms';
-import Users from '../components/users/Users';
+import { io } from 'socket.io-client';
 
 const Chat = (props) => {
-  const { session, user } = props; // got it
-  const history = useRef({}); // got it
-  const [conversation, setConversation] = useState([]); // got it
-  const [socket, setSocket] = useState(null); // got it
-  const [rooms, setRooms] = useState([]); // got it
-  const room = useRef({ id: 1, name: 'lobby' }); // got it
-  const isPrivate = useRef(false); // got it
+  const { session, user } = props;
+  const [socket, setSocket] = useState(null);
+
+  const history = useRef({});
+
+  const [rooms, setRooms] = useState([]);
+  const room = useRef({});
+
+  const [channels, setChannels] = useState([]);
+  const channel = useRef({ id: null, name: null, room_id: null });
+
+  const [conversation, setConversation] = useState([]);
+  const isPrivate = useRef(false);
+  const messagesRef = useRef();
+  const messageRef = useRef();
+
+
   const [users, setUsers] = useState([]);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const onlineUsersRef = useRef([]);
-  const messagesRef = useRef(); // got it
-  const messageRef = useRef(); // got it
-  const [counter, setCounter] = useState(200);
 
+  // APPROVED
   useEffect(() => {
     const newSocket = io('http://localhost:3001', { autoConnect: false });
     setSocket(newSocket);
   }, [])
 
+  // APPROVED
+  const changeChannel = async (newChannel) => {
+    isPrivate.current = false;
+    channel.current = newChannel;
+    if (history.current[room.current.path][channel.current.path]) {
+      setConversation(history.current[room.current.path][channel.current.path]);
+    } else {
+      const res = await axios.get('http://localhost:3000/api/messages', {
+        params: {
+          channelId: channel.current.id
+        }
+      });
+      history.current[room.current.path][channel.current.path] = res.data;
+      setConversation(res.data);
+    }
+  };
+
+
   useEffect(() => {
     if (socket) {
 
-      socket.on('rooms', (rooms) => {
+      socket.on('rooms', ({ rooms, channels }) => {
+        for (let i = 0; i < rooms.length; i++) {
+          history.current[rooms[i].path] = {};
+          for (let j = 0; j < channels.length; j++) {
+            history.current[rooms[i].path][channels[j].path] = null;
+          }
+        }
+        room.current = rooms[0];
         setRooms(rooms);
+        channel.current = channels[0];
+        setChannels(channels);
       });
 
+      socket.on('receiving', (data) => {
+        history.current[data.room][data.channel] = history.current[data.room][data.channel] || [];
+        history.current[data.room][data.channel].push(data);
+        console.log(history.current);
+        if (channel.current.name === data.channel) {
+          const temp = history.current[data.room][data.channel].slice();
+          setConversation(temp);
+        }
+      });
+
+
+
+
       socket.on('onlineUsers', (onlineUsers) => {
-        console.log('online', onlineUsers);
         onlineUsersRef.current = onlineUsersRef.current.concat(onlineUsers);
         // setOnlineUsers(onlineUsers);
         setOnlineUsers((prevOnlineUsers) => {
@@ -44,14 +92,6 @@ const Chat = (props) => {
         });
       });
 
-      socket.on('receiving', (received) => {
-        history.current[received.room] = history.current[received.room] || [];
-        history.current[received.room].push(received);
-        if (room.current.name === received.room) {
-          const temp = history.current[received.room].slice();
-          setConversation(temp);
-        }
-      });
 
       socket.on('something', (username) => {
         const temp = onlineUsersRef.current;
@@ -76,24 +116,30 @@ const Chat = (props) => {
     messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
   }, [conversation])
 
-  const amazing = () => {
-    console.log('online!', conversation);
-  }
+
 
   const changeRoom = async (newRoom) => {
-    isPrivate.current = false;
-    room.current.id = newRoom.id;
-    room.current.name = newRoom.name;
-    if (history.current[room.current.name]) {
-      setConversation(history.current[room.current.name]);
+
+    room.current = newRoom;
+    if (history.current[room.current.path]) {
+      console.log('already')
     } else {
-      const res = await axios.get('http://localhost:3000/api/messages', {
+      const res = await axios.get('http://localhost:3000/api/channels', {
         params: {
           roomId: room.current.id
         }
       });
-      history.current[room.current.name] = res.data;
-      setConversation(res.data);
+      if (res.data) {
+        console.log('res', res.data);
+        channel.current = res.data[0];
+        history.current[room.current.path] = {};
+        for (let i = 0; i < res.data.length; i++) {
+          history.current[room.current.path][res.data[i].name] = null;
+        }
+        setChannels(res.data);
+      } else {
+        console.log('failed');
+      }
     }
   };
 
@@ -101,38 +147,37 @@ const Chat = (props) => {
     isPrivate.current = true;
     room.current.id = newUser.id;
     room.current.name = newUser.username;
-    if (history.current[room.current.name]) {
-      setConversation(history.current[room.current.name]);
+    room.current.namespace_id = 1;
+    if (history.current[room.current.namespace_id][room.current.name]) {
+      setConversation(history.current[room.current.namespace_id][room.current.name]);
     } else {
       const res = await axios.get('http://localhost:3000/api/personal', {
         params: {
           to: room.current.id
         }
       });
-      history.current[room.current.name] = res.data;
+      history.current[room.current.namespace_id][room.current.name] = res.data;
       setConversation(res.data);
     }
   };
 
-  useEffect(() => {
-    console.log('cool', counter);
-  }, [counter])
-
-  const test = () => {
-    setCounter(2);
-  };
-
   return (
     <div className={styles.chat}>
-      <div onClick={test}>Test</div>
       <Rooms rooms={rooms} changeRoom={changeRoom} />
-      <Conversation conversation={conversation} socket={socket} room={room} isPrivate={isPrivate} messagesRef={messagesRef} messageRef={messageRef} />
-      <Users onlineUsers={onlineUsers} changePrivateRoom={changePrivateRoom} />
+      <Channels channels={channels} channel={channel} changeChannel={changeChannel} room={room} />
+      <div className={styles.main}>
+        <div className={styles.bar}># {room.current.name}</div>
+        <div className={styles.content}>
+          <Conversation conversation={conversation} messagesRef={messagesRef} socket={socket} room={room} channel={channel} isPrivate={isPrivate} messageRef={messageRef} />
+          <Users onlineUsers={onlineUsers} changePrivateRoom={changePrivateRoom} />
+        </div>
+      </div>
     </div>
-  );
+  )
 };
 
 export default Chat;
+
 
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);

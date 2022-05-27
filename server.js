@@ -1,19 +1,14 @@
 const express = require('express');
 const app = express();
 const { Server } = require('socket.io');
+// const { getChannels } = require('./lib/db');
 const server = app.listen(3001);
 const io = new Server(server, {
   cors: {
     origin: true
   }
 });
-const { getUsers, getRooms, addMessage, addPersonalMessage, getNamespaces, getBaseRooms, getJoinedRooms  } = require('./lib/db_server');
-
-// const userIO = io.of('/user');
-
-// userIO.on('connection', () => {
-//   console.log('hello!!!!!')
-// })
+const { getUsers, getRooms, addMessage, addPersonalMessage, getNamespaces, getBaseRooms, getChannels  } = require('./lib/db_server');
 
 // Middleware
 io.use((socket, next) => {
@@ -29,28 +24,16 @@ io.use((socket, next) => {
 
 // Connection
 io.on('connection', async (socket) => {
-  // const userIO = io.of('/user');
-
-  // userIO.on('connection', () => {
-  //   console.log('hello!!!!!')
-  // })
-
-  // const namespaces = await getNamespaces(socket.userId);
-  // for (let i = 0; i < namespaces.length; i++) {
-  //   io.of(`${namespaces[i].path}`).on('connection', (socket) => {
-  //     console.log(`Hello ${socket.id}`);
-  //   })
-  // }
-  // socket.emit('namespaces', namespaces);
   socket.join(socket.username);
-  // const ns = await getBaseRooms();
-  // const ns = await getNamespaces(socket.userId);
 
-  const rooms = await getJoinedRooms(socket.userId);
+  const rooms = await getRooms(socket.userId);
+  const roomIds = [];
   for (let room of rooms) {
+    roomIds.push(room.id);
     socket.join(room.name);
   }
-  socket.emit('rooms', rooms);
+  const channels = await getChannels(roomIds);
+  socket.emit('rooms', { rooms, channels });
 
   const onlineUsernames = [socket.username];
   const compare = socket.username;
@@ -68,16 +51,16 @@ io.on('connection', async (socket) => {
   }
   socket.emit('onlineUsers', onlineUsers);
 
-  socket.on('disconnecting', () => {
-    socket.broadcast.emit('something', socket.username);
-  })
+  // socket.on('disconnecting', () => {
+  //   socket.broadcast.emit('something', socket.username);
+  // })
   // add socket.on disconnect
 
   socket.on('sending', async ({ message, room, channel }) => {
-    const wait = await addMessage(socket.userId, room.id, channel.id, message);
+    const entry = await addMessage(socket.userId, room.id, channel.id, message);
     // io.to(room.name).emit('receiving', {
     io.emit('receiving', {
-      id: wait.insertId,
+      id: entry.insertId,
       content: message,
       created_at: 'yesterday at 2:30 PM',
       image: '/img/kier-in-sight-2iy6ohGsGAc-unsplash.jpg',

@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 const Messages = (props) => {
   const { conversation, messagesRef } = props;
-  console.log('convo', conversation);
+
   return (
     <div className={styles.messages} ref={messagesRef}>
       {conversation.map((message) => {

@@ -16,7 +16,6 @@ const Users = (props) => {
 
 const OnlineUser = (props) => {
   const { onlineUser, changePrivateRoom } = props;
-  console.log('!!!', onlineUser);
   return (
     <div onClick={() => { changePrivateRoom(onlineUser) }} className={styles.online_user}>
       <Image src={onlineUser.image} className={styles.image} alt='' width='30' height='30' />
