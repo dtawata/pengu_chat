@@ -8,7 +8,7 @@ const io = new Server(server, {
     origin: true
   }
 });
-const { getOnlineUsers, getRooms, addMessage, addPersonalMessage, getNamespaces, getBaseRooms, getChannels  } = require('./lib/db_server');
+const { getOnlineUsers, getRooms, addMessage, addPersonalMessage, getChannels  } = require('./lib/db_server');
 
 // Middleware
 io.use((socket, next) => {
@@ -30,7 +30,7 @@ io.on('connection', async (socket) => {
   const roomIds = [];
   for (let room of rooms) {
     roomIds.push(room.id);
-    socket.join(room.name);
+    socket.join(room.path);
   }
   const channels = await getChannels(roomIds);
   socket.emit('rooms', { rooms, channels });
@@ -39,31 +39,27 @@ io.on('connection', async (socket) => {
   // for (let [id, other] of io.of('/').sockets) {
   //     onlineUsernames.push(other.username);
   // }
-  // for (let onlineUser of onlineUsers) {
-  //   if (onlineUser.username === socket.username) {
-  //     socket.broadcast.emit('onlineUsers', onlineUser);
-  //     break;
-  //   }
-  // }
-  // socket.emit('onlineUsers', onlineUsers);
-  // // var clients= io.sockets.adapter.rooms['philosophy'].sockets
-  // // const clients = io.sockets.clients('philosophy');
-  // const sockets2 = await io.in('Philosophy').fetchSockets();
-  // const well = [];
-
-  // socket.emit('allUsers', sockets2[0].username);
+  // socket.broadcast.emit('something', 'hey there');
 
   socket.on('getOnlineUsers', async (room) => {
-    console.log(room);
-    const sockets2 = await io.in(room.name).fetchSockets();
+    const sockets2 = await io.in(room.path).fetchSockets();
     const onlineUsernames = [];
     for (let i = 0; i < sockets2.length; i++) {
       onlineUsernames.push(sockets2[i].username);
     }
     const onlineUsers = await getOnlineUsers(onlineUsernames);
-
+    let newUser = null;
+    for (let i = 0; i < onlineUsers.length; i++) {
+      if (onlineUsers[i].id === socket.userId) {
+        newUser = onlineUsers[i];
+        break;
+      }
+    }
+    console.log(newUser);
     socket.emit('onlineUsers', onlineUsers);
-    socket.broadcast.emit('onlineUsers', onlineUsers);
+    socket.broadcast.emit('newLogIn', { ...newUser, room: room.path });
+
+    // socket.broadcast.emit('newLogIn', 'hello');
   });
 
   socket.on('disconnecting', () => {
@@ -112,13 +108,6 @@ io.on('connection', async (socket) => {
   });
 
 });
-
-// const io2 = new Server(server, {
-//   cors: {
-//     origin: true
-//   }
-// });
-
 
 
 // io.use((socket, next) => {

@@ -28,9 +28,10 @@ const Chat = (props) => {
   const messageRef = useRef();
 
 
-  const [users, setUsers] = useState([]);
+  // const [users, setUsers] = useState([]);
+  const users = useRef({});
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const onlineUsersRef = useRef([]);
+  const [offlineUsers, setOfflineUsers] = useState([]);
 
   // APPROVED
   useEffect(() => {
@@ -40,9 +41,24 @@ const Chat = (props) => {
 
   // APPROVED
   const changeRoom = async (newRoom) => {
-    socket.emit('getOnlineUsers', newRoom);
     isPrivate.current = false;
     room.current = newRoom;
+
+    const userData = await axios.get('http://localhost:3000/api/users', {
+      params: {
+        roomId: room.current.id
+      }
+    });
+    users.current[room.current.path].online = {};
+    users.current[room.current.path].offline = {};
+    for (let i = 0; i < userData.data.length; i++) {
+      users.current[room.current.path].offline[userData.data[i].username] = userData.data[i];
+    }
+
+    setOfflineUsers(Object.values(users.current[room.current.path].offline));
+
+    socket.emit('getOnlineUsers', room.current);
+
     channel.current = groups.current[room.current.path][0];
     setChannels(groups.current[room.current.path]);
 
@@ -58,6 +74,7 @@ const Chat = (props) => {
       setConversation(res.data);
     }
   };
+
 
   // APPROVED
   const changeChannel = async (newChannel) => {
@@ -76,6 +93,10 @@ const Chat = (props) => {
     }
   };
 
+  useEffect(() => {
+    console.log('ou', offlineUsers);
+  }, [offlineUsers])
+
 
   useEffect(() => {
     if (socket) {
@@ -84,6 +105,7 @@ const Chat = (props) => {
         for (let i = 0; i < rooms.length; i++) {
           history.current[rooms[i].path] = {};
           groups.current[rooms[i].path] = [];
+          users.current[rooms[i].path] = {};
         }
 
         for (let i = 0; i < channels.length; i++) {
@@ -107,44 +129,30 @@ const Chat = (props) => {
         }
       });
 
-
-      socket.on('allUsers', (hello) => {
-        console.log('!!!', hello);
-      })
+      socket.on('newLogIn', (data) => {
+        console.log('yo', data);
+        users.current[data.room].online[data.username] = data;
+        delete users.current[data.room].offline[data.username];
+        setOnlineUsers(Object.values(users.current[room.current.path].online));
+        setOfflineUsers(Object.values(users.current[room.current.path].offline));
+      });
 
       socket.on('onlineUsers', (wsOnlineUsers) => {
-        setOnlineUsers(wsOnlineUsers);
-        // console.log(wsOnlineUsers);
-        // onlineUsersRef.current = onlineUsersRef.current.concat(wsOnlineUsers);
-        // setOnlineUsers((prevOnlineUsers) => {
-        //   return prevOnlineUsers.concat(wsOnlineUsers);
-        // });
+        for (let i = 0; i < wsOnlineUsers.length; i++) {
+          console.log('ws', wsOnlineUsers);
+          users.current[room.current.path].online[wsOnlineUsers[i].username] = wsOnlineUsers[i];
+          delete users.current[room.current.path].offline[wsOnlineUsers[i].username];
+        }
+        setOnlineUsers(Object.values(users.current[room.current.path].online));
+        setOfflineUsers(Object.values(users.current[room.current.path].offline));
       });
 
       socket.on('removeOnlineUser', (wsOnlineUser) => {
-        setOnlineUsers((prevOnlineUsers) => {
-          const temp = prevOnlineUsers.slice();
-          for (let i = 0; i < temp.length; i++) {
-            if (temp[i].username === wsOnlineUser) {
-              temp.splice(i, 1);
-            }
-          }
-          return temp;
-        });
-      });
-
-
-      socket.on('something', (username) => {
-        const temp = onlineUsersRef.current;
-
-        // console.log(onlineUsers);
-        for (let i = 0; i < temp.length; i++) {
-          if (temp[i].username === username) {
-            temp.splice(i, 1);
-          }
-        }
-        // console.log('temp', temp);
-        setOnlineUsers(temp);
+        console.log(wsOnlineUser);
+        users.current[room.current.path].offline[wsOnlineUser.username] = users.current[room.current.path].online[wsOnlineUser];
+        delete users.current[room.current.path].online[wsOnlineUser];
+        setOnlineUsers(Object.values(users.current[room.current.path].online));
+        setOfflineUsers(Object.values(users.current[room.current.path].offline));
       });
 
       socket.auth = user;
@@ -188,7 +196,7 @@ useEffect(() => {
         <div className={styles.bar}># {room.current.name}</div>
         <div className={styles.content}>
           <Conversation conversation={conversation} messagesRef={messagesRef} socket={socket} room={room} channel={channel} isPrivate={isPrivate} messageRef={messageRef} />
-          <Users onlineUsers={onlineUsers} changePrivateRoom={changePrivateRoom} />
+          <Users onlineUsers={onlineUsers} users={offlineUsers} changePrivateRoom={changePrivateRoom} />
         </div>
       </div>
     </div>
