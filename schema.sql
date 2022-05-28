@@ -66,11 +66,16 @@ CREATE TABLE joined_rooms (
 );
 
 INSERT INTO rooms (name, path, image)
-VALUES ('RFP57', 'rfp57', '/img/default.jpg');
+VALUES ('RFP57', 'rfp57', '/img/default.jpg'),
+('Philosophy', 'philosophy', '/img/idealism.jpg');
 
 INSERT INTO channels(name, path, room_id)
 VALUES ('general', 'general', 1),
 ('job-prep-resources', 'job-prep-resources', 1),
 ('resources', 'resources', 1),
 ('music', 'music', 1),
-('memes-random', 'memes-random', 1);
+('memes-random', 'memes-random', 1),
+('philosophy1', 'philosophy1', 2),
+('philosophy2', 'philosophy2', 2),
+('music', 'music', 2),
+('memes-random', 'memes-random', 2);

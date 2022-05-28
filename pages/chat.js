@@ -14,12 +14,13 @@ const Chat = (props) => {
   const [socket, setSocket] = useState(null);
 
   const history = useRef({});
+  const groups = useRef({});
 
   const [rooms, setRooms] = useState([]);
   const room = useRef({});
 
   const [channels, setChannels] = useState([]);
-  const channel = useRef({ id: null, name: null, room_id: null });
+  const channel = useRef({});
 
   const [conversation, setConversation] = useState([]);
   const isPrivate = useRef(false);
@@ -36,6 +37,26 @@ const Chat = (props) => {
     const newSocket = io('http://localhost:3001', { autoConnect: false });
     setSocket(newSocket);
   }, [])
+
+  // APPROVED
+  const changeRoom = async (newRoom) => {
+    isPrivate.current = false;
+    room.current = newRoom;
+    channel.current = groups.current[room.current.path][0];
+    setChannels(groups.current[room.current.path]);
+
+    if (history.current[room.current.path][channel.current.path]) {
+      setConversation(history.current[room.current.path][channel.current.path]);
+    } else {
+      const res = await axios.get('http://localhost:3000/api/messages', {
+        params: {
+          channelId: channel.current.id
+        }
+      });
+      history.current[room.current.path][channel.current.path] = res.data;
+      setConversation(res.data);
+    }
+  };
 
   // APPROVED
   const changeChannel = async (newChannel) => {
@@ -61,14 +82,18 @@ const Chat = (props) => {
       socket.on('rooms', ({ rooms, channels }) => {
         for (let i = 0; i < rooms.length; i++) {
           history.current[rooms[i].path] = {};
-          for (let j = 0; j < channels.length; j++) {
-            history.current[rooms[i].path][channels[j].path] = null;
-          }
+          groups.current[rooms[i].path] = [];
         }
+
+        for (let i = 0; i < channels.length; i++) {
+          history.current[channels[i].room][channels[i].path] = null;
+          groups.current[channels[i].room].push(channels[i]);
+        }
+
         room.current = rooms[0];
         setRooms(rooms);
-        channel.current = channels[0];
-        setChannels(channels);
+        channel.current = groups.current[room.current.path][0];
+        setChannels(groups.current[room.current.path]);
       });
 
       socket.on('receiving', (data) => {
@@ -118,30 +143,6 @@ const Chat = (props) => {
 
 
 
-  const changeRoom = async (newRoom) => {
-
-    room.current = newRoom;
-    if (history.current[room.current.path]) {
-      console.log('already')
-    } else {
-      const res = await axios.get('http://localhost:3000/api/channels', {
-        params: {
-          roomId: room.current.id
-        }
-      });
-      if (res.data) {
-        console.log('res', res.data);
-        channel.current = res.data[0];
-        history.current[room.current.path] = {};
-        for (let i = 0; i < res.data.length; i++) {
-          history.current[room.current.path][res.data[i].name] = null;
-        }
-        setChannels(res.data);
-      } else {
-        console.log('failed');
-      }
-    }
-  };
 
   const changePrivateRoom = async (newUser) => {
     isPrivate.current = true;
