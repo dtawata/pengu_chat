@@ -8,7 +8,7 @@ const io = new Server(server, {
     origin: true
   }
 });
-const { getUsers, getRooms, addMessage, addPersonalMessage, getNamespaces, getBaseRooms, getChannels  } = require('./lib/db_server');
+const { getOnlineUsers, getRooms, addMessage, addPersonalMessage, getNamespaces, getBaseRooms, getChannels  } = require('./lib/db_server');
 
 // Middleware
 io.use((socket, next) => {
@@ -35,26 +35,40 @@ io.on('connection', async (socket) => {
   const channels = await getChannels(roomIds);
   socket.emit('rooms', { rooms, channels });
 
-  const onlineUsernames = [socket.username];
-  const compare = socket.username;
-  for (let [id, socket] of io.of('/').sockets) {
-    if (socket.username !== compare) {
-      onlineUsernames.push(socket.username);
-    }
-  }
-  const onlineUsers = await getUsers(onlineUsernames);
-  for (let onlineUser of onlineUsers) {
-    if (onlineUser.username === socket.username) {
-      socket.broadcast.emit('onlineUsers', onlineUser);
-      break;
-    }
-  }
-  socket.emit('onlineUsers', onlineUsers);
+  // const onlineUsernames = [];
+  // for (let [id, other] of io.of('/').sockets) {
+  //     onlineUsernames.push(other.username);
+  // }
+  // for (let onlineUser of onlineUsers) {
+  //   if (onlineUser.username === socket.username) {
+  //     socket.broadcast.emit('onlineUsers', onlineUser);
+  //     break;
+  //   }
+  // }
+  // socket.emit('onlineUsers', onlineUsers);
+  // // var clients= io.sockets.adapter.rooms['philosophy'].sockets
+  // // const clients = io.sockets.clients('philosophy');
+  // const sockets2 = await io.in('Philosophy').fetchSockets();
+  // const well = [];
 
-  // socket.on('disconnecting', () => {
-  //   socket.broadcast.emit('something', socket.username);
-  // })
-  // add socket.on disconnect
+  // socket.emit('allUsers', sockets2[0].username);
+
+  socket.on('getOnlineUsers', async (room) => {
+    console.log(room);
+    const sockets2 = await io.in(room.name).fetchSockets();
+    const onlineUsernames = [];
+    for (let i = 0; i < sockets2.length; i++) {
+      onlineUsernames.push(sockets2[i].username);
+    }
+    const onlineUsers = await getOnlineUsers(onlineUsernames);
+
+    socket.emit('onlineUsers', onlineUsers);
+    socket.broadcast.emit('onlineUsers', onlineUsers);
+  });
+
+  socket.on('disconnecting', () => {
+    socket.broadcast.emit('removeOnlineUser', socket.username);
+  });
 
   socket.on('sending', async ({ message, room, channel }) => {
     const entry = await addMessage(socket.userId, room.id, channel.id, message);

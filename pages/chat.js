@@ -40,6 +40,7 @@ const Chat = (props) => {
 
   // APPROVED
   const changeRoom = async (newRoom) => {
+    socket.emit('getOnlineUsers', newRoom);
     isPrivate.current = false;
     room.current = newRoom;
     channel.current = groups.current[room.current.path][0];
@@ -107,13 +108,28 @@ const Chat = (props) => {
       });
 
 
+      socket.on('allUsers', (hello) => {
+        console.log('!!!', hello);
+      })
 
+      socket.on('onlineUsers', (wsOnlineUsers) => {
+        setOnlineUsers(wsOnlineUsers);
+        // console.log(wsOnlineUsers);
+        // onlineUsersRef.current = onlineUsersRef.current.concat(wsOnlineUsers);
+        // setOnlineUsers((prevOnlineUsers) => {
+        //   return prevOnlineUsers.concat(wsOnlineUsers);
+        // });
+      });
 
-      socket.on('onlineUsers', (onlineUsers) => {
-        onlineUsersRef.current = onlineUsersRef.current.concat(onlineUsers);
-        // setOnlineUsers(onlineUsers);
+      socket.on('removeOnlineUser', (wsOnlineUser) => {
         setOnlineUsers((prevOnlineUsers) => {
-          return prevOnlineUsers.concat(onlineUsers);
+          const temp = prevOnlineUsers.slice();
+          for (let i = 0; i < temp.length; i++) {
+            if (temp[i].username === wsOnlineUser) {
+              temp.splice(i, 1);
+            }
+          }
+          return temp;
         });
       });
 
@@ -141,7 +157,9 @@ const Chat = (props) => {
     messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
   }, [conversation])
 
-
+useEffect(() => {
+  console.log(onlineUsers);
+}, [onlineUsers])
 
 
   const changePrivateRoom = async (newUser) => {
