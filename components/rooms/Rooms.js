@@ -1,14 +1,21 @@
 import styles from './Rooms.module.css';
 import Image from 'next/image';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 const Rooms = (props) => {
-  const { rooms, changeRoom } = props;
+  const { rooms, changeRoom, addRoom } = props;
 
   return (
-    <div className={styles.namespaces}>
-      {rooms.map((room) => {
-        return <Room room={room} changeRoom={changeRoom} key={room.id} />
-      })}
+    <div className={styles.container}>
+      <div className={styles.rooms}>
+        {rooms.map((room) => {
+          return <Room room={room} changeRoom={changeRoom} key={room.id} />
+        })}
+      </div>
+      <div className={styles.icon_container}>
+        <FontAwesomeIcon icon={faPlus} className={styles.icon} flip='horizontal' />
+      </div>
     </div>
   );
 };

@@ -7,13 +7,18 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "server": "nodemon server.js"
+    "server": "nodemon server2.js"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.1.1",
+    "@fortawesome/free-brands-svg-icons": "^6.1.1",
+    "@fortawesome/free-solid-svg-icons": "^6.1.1",
+    "@fortawesome/react-fontawesome": "^0.1.18",
     "axios": "^0.27.2",
     "babel-plugin-superjson-next": "^0.4.3",
     "bcryptjs": "^2.4.3",
     "express": "^4.18.1",
+    "luxon": "^2.4.0",
     "multer": "^1.4.4",
     "mysql2": "^2.3.3",
     "next": "12.1.6",

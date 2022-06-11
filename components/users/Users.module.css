@@ -1,11 +1,8 @@
-.users {
-  width: 34%;
+.container {
+  width: 18.75%;
+  max-width: 360px;
   background-color: #444;
   padding: 15px;
-  /* width: 15%;
-  padding: 15px;
-  background-color: beige;
-  border-radius: 4px; */
 }
 
 .title {
@@ -30,3 +27,33 @@
   font-size: 17px;
   letter-spacing: 1px;
 }
+
+/*
+.users {
+  width: 34%;
+  background-color: #444;
+  padding: 15px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.online_user {
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.image {
+  border-radius: 50%;
+}
+.name {
+  margin-left: 5px;
+  margin-top: -5px;
+  font-size: 17px;
+  letter-spacing: 1px;
+} */

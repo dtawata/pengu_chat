@@ -1,24 +1,27 @@
 
-/* GROUP START */
-.group {
-  width: 22%;
+.container {
+  width: 15%;
+  max-width: 360px;
   background-color: #444;
 }
 
-.group_title {
-  padding: 20px 10px 10px 10px;
-  font-size: 16px;
+.title {
+  display: flex;
+  align-items: center;
+  height: 60px;
+  padding: 10px;
+  border-bottom: 2px solid #3A3A3A;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: 1px;
-  border-bottom: 2px solid #3A3A3A;
 }
 
-.rooms {
+.channels {
+  height: 92%;
   padding: 10px 15px 0 15px;
-  list-style: none;
 }
 
-.rooms li {
+.channel {
   cursor: pointer;
   padding: 10px 7px;
   font-size: 14px;
@@ -26,13 +29,13 @@
   color: #ddd;
 }
 
-.active {
+.channel.active {
   background-color: rgb(38, 38, 38);
-  /* background-color: #3A3A3A; */
-
+  border-radius: 4px;
   color: #fff;
   font-weight: 700;
-  border-radius: 4px;
 }
 
-/* GROUP END */
+.content {
+  height: calc(100% - 60px);
+}

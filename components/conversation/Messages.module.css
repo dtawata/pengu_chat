@@ -1,11 +1,46 @@
-.messages {
+.container {
   height: 92%;
+  padding: 30px 0;
   overflow-y: scroll;
 }
 
 .message {
   display: flex;
-  margin-bottom: 20px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 3px 30px;
+}
+
+.message:hover {
+  background-color: #444;
+}
+
+.message:nth-child(1) {
+  margin-top: 0;
+}
+
+.message_alt {
+  display: flex;
+  align-items: center;
+  padding: 2px 30px;
+}
+
+.message_alt:hover {
+  background-color: #444;
+}
+
+.date_time {
+  display: none;
+  font-size: 12px;
+  text-align: center;
+}
+
+.message_alt:hover .date_time {
+  display: block;
+}
+
+.profile_container {
+  width: 55px;
 }
 
 .profile {
@@ -38,3 +73,4 @@
   letter-spacing: 0.5px;
   line-height: 1.6;
 }
+

@@ -1,17 +1,23 @@
-import styles from './Channels.module.css';
+import styles from './Channels.module.css'
+import { Fragment } from 'react';
+import User from './User';
 
 const Channels = (props) => {
-  const { channels, channel, changeChannel, room } = props;
-  const selected = channel.current.name;
+  const { channels, channel, room, user, changeChannel } = props;
+  const selected = channel.current ? channel.current.name : null;
 
   return (
-    <div className={styles.group}>
-      <div className={styles.group_title}>{room.current.name}</div>
-      <ul className={styles.rooms}>
-        {channels.map((channel) => {
-          return <Channel channel={channel} changeChannel={changeChannel} selected={selected} key={channel.id} />;
-        })}
-      </ul>
+    <div className={styles.container}>
+      <div className={styles.title}>{room.current.name}</div>
+      <div className={styles.content}>
+        <div className={styles.channels}>
+          {channels.map((channel) => {
+            return <Channel channel={channel} changeChannel={changeChannel} selected={selected} key={channel.id} />;
+          })}
+        </div>
+        <User user={user} />
+      </div>
+      {/* <div onClick={() => { showForm('channel'); }}>Add Channel</div> */}
     </div>
   );
 };
@@ -20,15 +26,12 @@ const Channel = (props) => {
   const { channel, changeChannel, selected } = props;
 
   return (
-
-    // <li onClick={() => {  }}># {channel.name}</li>
-
-    <div>
+    <Fragment>
       {selected === channel.name ?
-        <li onClick={() => { changeChannel(channel); }} className={styles.active}># {channel.name}</li> :
-        <li onClick={() => { changeChannel(channel); }}># {channel.name}</li>
+        <div onClick={() => { changeChannel(channel); }} className={`${styles.channel} ${styles.active}`}># {channel.name}</div> :
+        <div onClick={() => { changeChannel(channel); }} className={styles.channel}># {channel.name}</div>
       }
-    </div>
+    </Fragment>
   );
 };
 

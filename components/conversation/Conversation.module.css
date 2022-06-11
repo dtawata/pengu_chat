@@ -1,11 +1,8 @@
 
 .conversation {
-  width: 66%;
-  /* margin: 0 1.5%; */
-  /* height: 70vh; */
-  padding: 20px;
+  width: 81.25%;
+  flex-grow: 1;
   background-color: rgb(75, 75, 75);
-
   border-radius: 4px;
   color: #fff;
 }

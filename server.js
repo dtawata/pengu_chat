@@ -1,14 +1,14 @@
 const express = require('express');
 const app = express();
 const { Server } = require('socket.io');
-// const { getChannels } = require('./lib/db');
 const server = app.listen(3001);
 const io = new Server(server, {
   cors: {
     origin: true
   }
 });
-const { getOnlineUsers, getRooms, addMessage, addPersonalMessage, getChannels  } = require('./lib/db_server');
+
+const { getRoom, getRooms, getChannels, getOnlineUsers, addMessage, addPersonalMessage  } = require('./lib/db_server');
 
 // Middleware
 io.use((socket, next) => {
@@ -33,13 +33,7 @@ io.on('connection', async (socket) => {
     socket.join(room.path);
   }
   const channels = await getChannels(roomIds);
-  socket.emit('rooms', { rooms, channels });
-
-  // const onlineUsernames = [];
-  // for (let [id, other] of io.of('/').sockets) {
-  //     onlineUsernames.push(other.username);
-  // }
-  // socket.broadcast.emit('something', 'hey there');
+  socket.emit('initializeRooms', { rooms, channels });
 
   socket.on('getOnlineUsers', async (room) => {
     const sockets2 = await io.in(room.path).fetchSockets();
@@ -55,7 +49,6 @@ io.on('connection', async (socket) => {
         break;
       }
     }
-    console.log(newUser);
     socket.emit('onlineUsers', onlineUsers);
     socket.broadcast.emit('newLogIn', { ...newUser, room: room.path });
 
@@ -67,12 +60,13 @@ io.on('connection', async (socket) => {
   });
 
   socket.on('sending', async ({ message, room, channel }) => {
-    const entry = await addMessage(socket.userId, room.id, channel.id, message);
+    const now = new Date();
+    const entry = await addMessage(socket.userId, room.id, channel.id, message, now);
     // io.to(room.name).emit('receiving', {
     io.emit('receiving', {
       id: entry.insertId,
       content: message,
-      created_at: 'yesterday at 2:30 PM',
+      created_at: now.toISOString(),
       image: '/img/kier-in-sight-2iy6ohGsGAc-unsplash.jpg',
       room_id: room.id,
       room: room.path,
@@ -82,6 +76,13 @@ io.on('connection', async (socket) => {
       channel: channel.name
     });
   });
+
+  socket.on('join_room', async (roomId) => {
+    const room = await getRoom({ userId: socket.userId, roomId: roomId});
+    socket.join(room.path);
+    const channels = await getChannels([room.id]);
+    socket.emit('newRoom', { room, channels });
+  })
 
   socket.on('sending_private', async ({ message, room }) => {
     const wait = await addPersonalMessage(socket.userId, room.id, message);

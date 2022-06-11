@@ -1,158 +1,108 @@
-import styles from '../styles/Chat2.module.css';
+import styles from '../styles/Chat.module.css';
+import { useState, useRef, useEffect } from 'react';
+import { getSession } from 'next-auth/react';
+import { io } from 'socket.io-client';
+import axios from 'axios';
+import { getUser } from '../lib/db';
 import Rooms from '../components/rooms/Rooms';
 import Channels from '../components/channels/Channels';
 import Conversation from '../components/conversation/Conversation';
-import axios from 'axios';
 import Users from '../components/users/Users';
-import { useState, useRef, useEffect } from 'react';
-import { getSession } from 'next-auth/react';
-import { getUser } from '../lib/db';
-import { io } from 'socket.io-client';
 
 const Chat = (props) => {
   const { session, user } = props;
   const [socket, setSocket] = useState(null);
-
+  const [conversation, setConversation] = useState([]);
   const history = useRef({});
-  const groups = useRef({});
-
   const [rooms, setRooms] = useState([]);
   const room = useRef({});
-
   const [channels, setChannels] = useState([]);
   const channel = useRef({});
-
-  const [conversation, setConversation] = useState([]);
+  const [users, setUsers] = useState([]);
+  const ref = useRef({});
   const isPrivate = useRef(false);
   const messagesRef = useRef();
   const messageRef = useRef();
 
-
-  // const [users, setUsers] = useState([]);
-  const users = useRef({});
-  const [onlineUsers, setOnlineUsers] = useState([]);
-  const [offlineUsers, setOfflineUsers] = useState([]);
-
-  // APPROVED
   useEffect(() => {
     const newSocket = io('http://localhost:3001', { autoConnect: false });
     setSocket(newSocket);
   }, [])
 
-  // APPROVED
-  const changeRoom = async (newRoom) => {
-    isPrivate.current = false;
-    room.current = newRoom;
-
-    const userData = await axios.get('http://localhost:3000/api/users', {
-      params: {
-        roomId: room.current.id
-      }
-    });
-    users.current[room.current.path].online = {};
-    users.current[room.current.path].offline = {};
-    for (let i = 0; i < userData.data.length; i++) {
-      users.current[room.current.path].offline[userData.data[i].username] = userData.data[i];
-    }
-
-    setOfflineUsers(Object.values(users.current[room.current.path].offline));
-
-    socket.emit('getOnlineUsers', room.current);
-
-    channel.current = groups.current[room.current.path][0];
-    setChannels(groups.current[room.current.path]);
-
-    if (history.current[room.current.path][channel.current.path]) {
-      setConversation(history.current[room.current.path][channel.current.path]);
-    } else {
-      const res = await axios.get('http://localhost:3000/api/messages', {
-        params: {
-          channelId: channel.current.id
-        }
-      });
-      history.current[room.current.path][channel.current.path] = res.data;
-      setConversation(res.data);
-    }
-  };
-
-
-  // APPROVED
-  const changeChannel = async (newChannel) => {
-    isPrivate.current = false;
-    channel.current = newChannel;
-    if (history.current[room.current.path][channel.current.path]) {
-      setConversation(history.current[room.current.path][channel.current.path]);
-    } else {
-      const res = await axios.get('http://localhost:3000/api/messages', {
-        params: {
-          channelId: channel.current.id
-        }
-      });
-      history.current[room.current.path][channel.current.path] = res.data;
-      setConversation(res.data);
-    }
-  };
-
-  useEffect(() => {
-    console.log('ou', offlineUsers);
-  }, [offlineUsers])
-
-
   useEffect(() => {
     if (socket) {
 
-      socket.on('rooms', ({ rooms, channels }) => {
-        for (let i = 0; i < rooms.length; i++) {
-          history.current[rooms[i].path] = {};
-          groups.current[rooms[i].path] = [];
-          users.current[rooms[i].path] = {};
+      socket.on('initialize', async ({ rooms, channels }) => {
+
+        for (let room of rooms) {
+          history.current[room.path] = {};
+          ref.current[room.path] = { channels: [], users: {} };
         }
 
-        for (let i = 0; i < channels.length; i++) {
-          history.current[channels[i].room][channels[i].path] = null;
-          groups.current[channels[i].room].push(channels[i]);
+        for (let channel of channels) {
+          history.current[channel.room][channel.path] = null;
+          ref.current[channel.room].channels.push(channel);
         }
 
         room.current = rooms[0];
+        channel.current = ref.current[room.current.path].channels[0];
         setRooms(rooms);
-        channel.current = groups.current[room.current.path][0];
-        setChannels(groups.current[room.current.path]);
+        setChannels(ref.current[room.current.path].channels);
+
+        if (channel.current) {
+          const messages = await axios.get('/api/messages', {
+            params: {
+              roomId: room.current.id,
+              channelId: channel.current.id
+            }
+          });
+          history.current[room.current.path][channel.current.path] = messages.data;
+          setConversation(messages.data);
+        }
+
+        const users = await axios.get('/api/users', {
+          params: {
+            roomId: room.current.id
+          }
+        });
+
+        for (let user of users.data) {
+          ref.current[room.current.path].users[user.username] = user;
+          ref.current[room.current.path].users[user.username].online = false;
+        }
+        setUsers(Object.values(ref.current[room.current.path].users));
+        socket.emit('getOnlineUsers', room.current);
+      });
+
+      socket.on('initializeOnlineUsers', (onlineUsers) => {
+        for (let onlineUser of onlineUsers) {
+          ref.current[room.current.path].users[onlineUser].online = true;
+        }
+        setUsers(Object.values(ref.current[room.current.path].users));
+      });
+
+      socket.on('addOnlineUser', (username) => {
+        if (ref.current[room.current.path].users[username]) {
+          ref.current[room.current.path].users[username].online = true;
+        }
+        setUsers(Object.values(ref.current[room.current.path].users));
+      });
+
+      socket.on('removeOnlineUser', (username) => {
+        if (ref.current[room.current.path].users[username]) {
+          ref.current[room.current.path].users[username].online = false;
+        }
+        setUsers(Object.values(ref.current[room.current.path].users));
       });
 
       socket.on('receiving', (data) => {
-        history.current[data.room][data.channel] = history.current[data.room][data.channel] || [];
-        history.current[data.room][data.channel].push(data);
-        console.log(history.current);
-        if (channel.current.name === data.channel) {
-          const temp = history.current[data.room][data.channel].slice();
-          setConversation(temp);
+        if (history.current[data.room][data.channel]) {
+          history.current[data.room][data.channel].push(data);
+          if (channel.current.name === data.channel) {
+            const temp = history.current[data.room][data.channel].slice();
+            setConversation(temp);
+          }
         }
-      });
-
-      socket.on('newLogIn', (data) => {
-        console.log('yo', data);
-        users.current[data.room].online[data.username] = data;
-        delete users.current[data.room].offline[data.username];
-        setOnlineUsers(Object.values(users.current[room.current.path].online));
-        setOfflineUsers(Object.values(users.current[room.current.path].offline));
-      });
-
-      socket.on('onlineUsers', (wsOnlineUsers) => {
-        for (let i = 0; i < wsOnlineUsers.length; i++) {
-          console.log('ws', wsOnlineUsers);
-          users.current[room.current.path].online[wsOnlineUsers[i].username] = wsOnlineUsers[i];
-          delete users.current[room.current.path].offline[wsOnlineUsers[i].username];
-        }
-        setOnlineUsers(Object.values(users.current[room.current.path].online));
-        setOfflineUsers(Object.values(users.current[room.current.path].offline));
-      });
-
-      socket.on('removeOnlineUser', (wsOnlineUser) => {
-        console.log(wsOnlineUser);
-        users.current[room.current.path].offline[wsOnlineUser.username] = users.current[room.current.path].online[wsOnlineUser];
-        delete users.current[room.current.path].online[wsOnlineUser];
-        setOnlineUsers(Object.values(users.current[room.current.path].online));
-        setOfflineUsers(Object.values(users.current[room.current.path].offline));
       });
 
       socket.auth = user;
@@ -160,15 +110,55 @@ const Chat = (props) => {
     }
   }, [socket, user])
 
-  useEffect(() => {
-    messageRef.current.value = '';
-    messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
-  }, [conversation])
+  const changeRoom = async (newRoom) => {
+    isPrivate.current = false;
+    room.current = newRoom;
+    channel.current = ref.current[room.current.path].channels[0];
+    setChannels(ref.current[room.current.path].channels);
 
-useEffect(() => {
-  console.log(onlineUsers);
-}, [onlineUsers])
+    if (channel.current) {
+      const messages = await axios.get('/api/messages', {
+        params: {
+          roomId: room.current.id,
+          channelId: channel.current.id
+        }
+      });
+      history.current[room.current.path][channel.current.path] = messages.data;
+      setConversation(messages.data);
+    } else {
+      setConversation([]);
+    }
 
+    const users = await axios.get('/api/users', {
+      params: {
+        roomId: room.current.id
+      }
+    });
+
+    for (let user of users.data) {
+      ref.current[room.current.path].users[user.username] = user;
+      ref.current[room.current.path].users[user.username].online = false;
+    }
+    setUsers(Object.values(ref.current[room.current.path].users));
+    socket.emit('getOnlineUsers', room.current);
+  };
+
+  const changeChannel = async (newChannel) => {
+    isPrivate.current = false;
+    channel.current = newChannel;
+    if (history.current[room.current.path][channel.current.path]) {
+      setConversation(history.current[room.current.path][channel.current.path]);
+    } else {
+      const res = await axios.get('/api/messages', {
+        params: {
+          roomId: room.current.id,
+          channelId: channel.current.id
+        }
+      });
+      history.current[room.current.path][channel.current.path] = res.data;
+      setConversation(res.data);
+    }
+  };
 
   const changePrivateRoom = async (newUser) => {
     isPrivate.current = true;
@@ -178,7 +168,7 @@ useEffect(() => {
     if (history.current[room.current.namespace_id][room.current.name]) {
       setConversation(history.current[room.current.namespace_id][room.current.name]);
     } else {
-      const res = await axios.get('http://localhost:3000/api/personal', {
+      const res = await axios.get('/api/personal', {
         params: {
           to: room.current.id
         }
@@ -188,23 +178,31 @@ useEffect(() => {
     }
   };
 
+  const addRoom = async () => {
+    console.log('add room');
+  };
+
+  useEffect(() => {
+    messageRef.current.value = '';
+    // messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+  }, [conversation])
+
   return (
     <div className={styles.chat}>
-      <Rooms rooms={rooms} changeRoom={changeRoom} />
-      <Channels channels={channels} channel={channel} changeChannel={changeChannel} room={room} />
-      <div className={styles.main}>
-        <div className={styles.bar}># {room.current.name}</div>
+      <Rooms rooms={rooms} changeRoom={changeRoom} addRoom={addRoom} />
+      <Channels channels={channels} channel={channel} room={room} user={user} changeChannel={changeChannel} />
+      <main className={styles.main}>
+        <div className={styles.bar}># {channel.current ? channel.current.name : null }</div>
         <div className={styles.content}>
-          <Conversation conversation={conversation} messagesRef={messagesRef} socket={socket} room={room} channel={channel} isPrivate={isPrivate} messageRef={messageRef} />
-          <Users onlineUsers={onlineUsers} users={offlineUsers} changePrivateRoom={changePrivateRoom} />
+          <Conversation conversation={conversation} socket={socket} room={room} channel={channel} messageRef={messageRef} isPrivate={isPrivate} messagesRef={messagesRef} />
+          <Users users={users} />
         </div>
-      </div>
+      </main>
     </div>
-  )
+  );
 };
 
 export default Chat;
-
 
 export const getServerSideProps = async (context) => {
   const session = await getSession(context);
@@ -226,3 +224,62 @@ export const getServerSideProps = async (context) => {
     }
   }
 };
+
+
+  // socket.on('newRoom', (data) => {
+
+  //     history.current[data.room.path] = {};
+  //     groups.current[data.room.path] = [];
+  //     users.current[data.room.path] = {};
+
+  //   for (let i = 0; i < data.channels.length; i++) {
+  //     history.current[data.channels[i].room][channels[i].path] = null;
+  //     groups.current[data.channels[i].room].push(channels[i]);
+  //   }
+
+  //   console.log('newroom', data);
+  // })
+
+  // socket.on('receiving', (data) => {
+  //   history.current[data.room][data.channel] = history.current[data.room][data.channel] || [];
+  //   history.current[data.room][data.channel].push(data);
+  //   if (channel.current.name === data.channel) {
+  //     const temp = history.current[data.room][data.channel].slice();
+  //     setConversation(temp);
+  //   }
+  // });
+
+
+
+  // const addRoom = async (e) => {
+  //   e.preventDefault();
+  //   console.log(modal.current.value);
+  //   const res = await axios.post('http://localhost:3000/api/addroom/', {
+  //     name: modal.current.value,
+  //     path: modal.current.value,
+  //     image: null
+  //   });
+  //   console.log('res', res.data);
+  //   socket.emit('join_room', res.data.insertId);
+  //   setShowModal((prevState) => {
+  //     return !prevState;
+  //   });
+  // }
+
+  // const addChannel = async (e) => {
+  //   e.preventDefault();
+  //   const res = await axios.post('http://localhost:3000/api/addchannel/', {
+  //     name: formChannel.current.value,
+  //     path: formChannel.current.value,
+  //     roomId: room.current.id
+  //   });
+  //   groups.current[room.current.path].push({
+  //     id: res.data.insertId,
+  //     name: formChannel.current.value,
+  //     path: formChannel.current.value,
+  //     room_id: room.current.id,
+  //     room: room.current.path
+  //   });
+  //   setChannels(groups.current[room.current.path].slice());
+  // };
+

@@ -20,7 +20,7 @@ CREATE TABLE rooms (
   id INT NOT NULL auto_increment,
   name VARCHAR(255) NOT NULL,
   path VARCHAR(255) NOT NULL,
-  image VARCHAR(255) DEFAULT '/img/default.jpg',
+  image VARCHAR(255) NULL DEFAULT '/img/default.jpg',
   PRIMARY KEY(id)
 );
 

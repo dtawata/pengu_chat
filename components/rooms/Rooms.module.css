@@ -1,15 +1,19 @@
-
-/* NAMESPACE START */
-.namespaces {
-  width: 6.5%;
-  background-color: #3A3A3A;
+.container {
+  width: 5%;
+  max-width: 120px;
   padding: 0 8px;
+  background-color: #3A3A3A;
+}
+
+.rooms {
+  height: 95%;
+  padding-top: 15px;
 }
 
 .profile_container {
   display: flex;
   justify-content: center;
-  margin: 15px 0;
+  margin-bottom: 15px;
 }
 
 .profile {
@@ -21,4 +25,14 @@
 .profile:hover {
   border-radius: 30%;
 }
-/* NAMESPACE END */
+
+.icon_container {
+  height: 5%;
+  display: flex;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.icon {
+  font-size: 24px;
+}
