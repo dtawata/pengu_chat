@@ -39,3 +39,11 @@
 .content {
   height: calc(100% - 60px);
 }
+
+.add_channel {
+  cursor: pointer;
+  padding: 10px 7px;
+  font-size: 14px;
+  letter-spacing: 1px;
+  color: #ddd;
+}

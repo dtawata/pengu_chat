@@ -8,7 +8,7 @@ const io = new Server(server, {
   }
 });
 
-const { getRooms, getChannels, getUser, addMessage } = require('./lib/db_server');
+const { getRooms, getChannels, getUser, addMessage, getRoom } = require('./lib/db_server');
 
 // Middleware
 io.use((socket, next) => {
@@ -56,8 +56,13 @@ io.on('connection', async (socket) => {
 
   // EVENT - sending
   socket.on('sending', async ({ message, room, channel }) => {
+    console.log(message)
+    console.log(room.id)
+    console.log(channel.id)
+    console.log(socket.userId)
     const now = new Date();
     const entry = await addMessage(socket.userId, room.id, channel.id, message, now);
+    console.log('?!?', entry);
     // io.to(room.name).emit('receiving', {
     io.emit('receiving', {
       id: entry.insertId,
@@ -73,6 +78,12 @@ io.on('connection', async (socket) => {
     });
   });
 
-
+  socket.on('join_room', async (roomId) => {
+    const room = await getRoom({ userId: socket.userId, roomId: roomId});
+    socket.join(room.path);
+    const channels = await getChannels([room.id]);
+    console.log('join rooms', room)
+    socket.emit('addRoom', { room, channels });
+  });
 
 });

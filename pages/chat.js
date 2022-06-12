@@ -8,6 +8,8 @@ import Rooms from '../components/rooms/Rooms';
 import Channels from '../components/channels/Channels';
 import Conversation from '../components/conversation/Conversation';
 import Users from '../components/users/Users';
+import Modal from '../components/modal/Modal';
+import Notifications from '../components/notifications/Notifications';
 
 const Chat = (props) => {
   const { session, user } = props;
@@ -15,6 +17,7 @@ const Chat = (props) => {
   const [conversation, setConversation] = useState([]);
   const history = useRef({});
   const [rooms, setRooms] = useState([]);
+  const roomsRef = useRef([]);
   const room = useRef({});
   const [channels, setChannels] = useState([]);
   const channel = useRef({});
@@ -23,6 +26,11 @@ const Chat = (props) => {
   const isPrivate = useRef(false);
   const messagesRef = useRef();
   const messageRef = useRef();
+  const [modal, setModal] = useState(false);
+  const modalRoomRef = useRef();
+  const modalChannelRef = useRef();
+  const modalForm = useRef('Room');
+  const [notifications, setNotifications] = useState(false);
 
   useEffect(() => {
     const newSocket = io('http://localhost:3001', { autoConnect: false });
@@ -43,9 +51,9 @@ const Chat = (props) => {
           history.current[channel.room][channel.path] = null;
           ref.current[channel.room].channels.push(channel);
         }
-
         room.current = rooms[0];
         channel.current = ref.current[room.current.path].channels[0];
+        roomsRef.current = rooms;
         setRooms(rooms);
         setChannels(ref.current[room.current.path].channels);
 
@@ -93,6 +101,20 @@ const Chat = (props) => {
           ref.current[room.current.path].users[username].online = false;
         }
         setUsers(Object.values(ref.current[room.current.path].users));
+      });
+
+      socket.on('addRoom', (data) => {
+        roomsRef.current = roomsRef.current.concat([data.room]);
+        history.current[data.room.path] = {};
+        ref.current[data.room.path] = { channels: [], users: {} };
+        for (let channel of data.channels) {
+          history.current[channel.room][channel.path] = null;
+          ref.current[channel.room].channels.push(channel);
+        }
+        room.current = data.room;
+        channel.current = ref.current[room.current.path].channels[0];
+        setRooms(roomsRef.current);
+        setChannels(ref.current[room.current.path].channels);
       });
 
       socket.on('receiving', (data) => {
@@ -178,8 +200,58 @@ const Chat = (props) => {
     }
   };
 
-  const addRoom = async () => {
-    console.log('add room');
+  const toggleForm = (typeOfForm) => {
+    modalForm.current = typeOfForm;
+    setModal((prevModal) => {
+      return !prevModal;;
+    });
+  };
+
+  const inviteFriends = () => {
+    console.log('inviting!');
+  };
+
+  const addRoom = async (e) => {
+    e.preventDefault();
+    const res = await axios.post('/api/addroom/', {
+      name: modalRoomRef.current.value,
+      path: modalRoomRef.current.value.toLowerCase(),
+      image: null
+    });
+    socket.emit('join_room', res.data.insertId);
+    setConversation([]);
+    setModal((prevState) => {
+      return !prevState;
+    });
+  };
+
+  const addChannel = async (e) => {
+    e.preventDefault();
+    const res = await axios.post('/api/addchannel/', {
+      name: modalChannelRef.current.value,
+      path: modalChannelRef.current.value.toLowerCase(),
+      roomId: room.current.id
+    });
+    const temp = {
+      id: res.data.insertId,
+      name: modalChannelRef.current.value,
+      path: modalChannelRef.current.value.toLowerCase(),
+      room_id: room.current.id,
+      room: room.current.path
+    };
+    channel.current = temp;
+    console.log(channel.current);
+    history.current[temp.room][temp.path] = [];
+    ref.current[temp.room].channels.push(temp);
+    setChannels(ref.current[room.current.path].channels);
+    setConversation([]);
+    setModal((prevState) => {
+      return !prevState;
+    });
+  };
+
+  const showNotifications = () => {
+    console.log('show notifications');
   };
 
   useEffect(() => {
@@ -189,8 +261,8 @@ const Chat = (props) => {
 
   return (
     <div className={styles.chat}>
-      <Rooms rooms={rooms} changeRoom={changeRoom} addRoom={addRoom} />
-      <Channels channels={channels} channel={channel} room={room} user={user} changeChannel={changeChannel} />
+      <Rooms rooms={rooms} changeRoom={changeRoom} toggleForm={toggleForm} />
+      <Channels channels={channels} channel={channel} room={room} user={user} toggleForm={toggleForm} changeChannel={changeChannel} inviteFriends={inviteFriends} />
       <main className={styles.main}>
         <div className={styles.bar}># {channel.current ? channel.current.name : null }</div>
         <div className={styles.content}>
@@ -198,6 +270,8 @@ const Chat = (props) => {
           <Users users={users} />
         </div>
       </main>
+      {modal && <Modal toggleForm={toggleForm} addRoom={addRoom} addChannel={addChannel} modalRoomRef={modalRoomRef} modalChannelRef={modalChannelRef} modalForm={modalForm} />}
+      {notifications && <Notifications />}
     </div>
   );
 };
@@ -251,20 +325,7 @@ export const getServerSideProps = async (context) => {
 
 
 
-  // const addRoom = async (e) => {
-  //   e.preventDefault();
-  //   console.log(modal.current.value);
-  //   const res = await axios.post('http://localhost:3000/api/addroom/', {
-  //     name: modal.current.value,
-  //     path: modal.current.value,
-  //     image: null
-  //   });
-  //   console.log('res', res.data);
-  //   socket.emit('join_room', res.data.insertId);
-  //   setShowModal((prevState) => {
-  //     return !prevState;
-  //   });
-  // }
+
 
   // const addChannel = async (e) => {
   //   e.preventDefault();

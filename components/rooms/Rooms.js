@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 
 const Rooms = (props) => {
-  const { rooms, changeRoom, addRoom } = props;
+  const { rooms, changeRoom, toggleForm } = props;
 
   return (
     <div className={styles.container}>
@@ -13,7 +13,7 @@ const Rooms = (props) => {
           return <Room room={room} changeRoom={changeRoom} key={room.id} />
         })}
       </div>
-      <div className={styles.icon_container}>
+      <div onClick={() => { toggleForm('Room'); }} className={styles.icon_container}>
         <FontAwesomeIcon icon={faPlus} className={styles.icon} flip='horizontal' />
       </div>
     </div>

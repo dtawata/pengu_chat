@@ -3,7 +3,7 @@ import { Fragment } from 'react';
 import User from './User';
 
 const Channels = (props) => {
-  const { channels, channel, room, user, changeChannel } = props;
+  const { channels, channel, room, user, changeChannel, toggleForm } = props;
   const selected = channel.current ? channel.current.name : null;
 
   return (
@@ -14,6 +14,7 @@ const Channels = (props) => {
           {channels.map((channel) => {
             return <Channel channel={channel} changeChannel={changeChannel} selected={selected} key={channel.id} />;
           })}
+          <div onClick={() => { toggleForm('Channel'); }} className={styles.add_channel}>Add Channel</div>
         </div>
         <User user={user} />
       </div>
