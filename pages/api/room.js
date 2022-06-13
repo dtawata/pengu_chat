@@ -1,13 +1,15 @@
-import { getUser, addChannel, addJoinedRoom } from '../../lib/db';
 import { getSession } from 'next-auth/react';
+import { getUser, getRoom } from '../../lib/db';
 
 const Handler = async (req, res) => {
   const session = await getSession({ req });
   const email = session.user.email;
   const user = await getUser(email);
-  let { name, path, roomId } = req.body;
-  const data = await addChannel({ name, path, roomId });
-  res.send(data);
+  const { roomId } = req.body;
+  console.log('roomid', roomId);
+  const room = await getRoom(roomId);
+  console.log('!!!', room);
+  res.send(room);
 };
 
 export default Handler;

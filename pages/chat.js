@@ -30,7 +30,10 @@ const Chat = (props) => {
   const modalRoomRef = useRef();
   const modalChannelRef = useRef();
   const modalForm = useRef('Room');
-  const [notifications, setNotifications] = useState(false);
+  const [displayNotifications, setDisplayNotifications] = useState(false);
+  const modalFriendsRef = useRef();
+  const [notifications, setNotifications] = useState([]);
+  const notificationsRef = useRef([]);
 
   useEffect(() => {
     const newSocket = io('http://localhost:3001', { autoConnect: false });
@@ -80,6 +83,10 @@ const Chat = (props) => {
         }
         setUsers(Object.values(ref.current[room.current.path].users));
         socket.emit('getOnlineUsers', room.current);
+
+        const notifications = await axios.get('/api/notifications');
+        notificationsRef.current = notifications.data;
+        setNotifications(notifications.data);
       });
 
       socket.on('initializeOnlineUsers', (onlineUsers) => {
@@ -125,6 +132,28 @@ const Chat = (props) => {
             setConversation(temp);
           }
         }
+      });
+
+      socket.on('invitedNewUser', (user) => {
+        // console.log('nice', data);
+        ref.current[room.current.path].users[user.username] = user;
+        ref.current[room.current.path].users[user.username].online = false;
+        setUsers(Object.values(ref.current[room.current.path].users));
+        console.log('invitednewuser', room.current);
+        socket.emit('getOnlineUsersAgain', room.current);
+      });
+
+      socket.on('receive_invite', (notification) => {
+        notificationsRef.current.push(notification);
+        setNotifications(notificationsRef.current);
+      });
+
+      socket.on('reInitializeOnlineUsers', (onlineUsers) => {
+        console.log('??!', onlineUsers);
+        // for (let onlineUser of onlineUsers) {
+        //   ref.current[room.current.path].users[onlineUser].online = true;
+        // }
+        // setUsers(Object.values(ref.current[room.current.path].users));
       });
 
       socket.auth = user;
@@ -207,8 +236,24 @@ const Chat = (props) => {
     });
   };
 
-  const inviteFriends = () => {
-    console.log('inviting!');
+  useEffect(() => {
+    console.log('notifications', notifications);
+  }, [notifications])
+
+  const sendInvite = async (e) => {
+    e.preventDefault();
+    // const temp = { username: modalFriendsRef.current.value, roomId: room.current.id };
+    // console.log(temp)
+    // const res = await axios.post('/api/invite', temp);
+    // const newUserId = res.data;
+    // socket.emit('invited', { username: modalFriendsRef.current.value, userId: newUserId, room: room.current.path });
+    socket.emit('send_invite', { from: user.id, toUsername: modalFriendsRef.current.value, room: room.current.id });
+    // setUsers(Object.values(ref.current[room.current.path].users));
+    // socket.emit('getOnlineUsers', room.current);
+
+    setModal((prevState) => {
+      return !prevState;
+    });
   };
 
   const addRoom = async (e) => {
@@ -240,7 +285,6 @@ const Chat = (props) => {
       room: room.current.path
     };
     channel.current = temp;
-    console.log(channel.current);
     history.current[temp.room][temp.path] = [];
     ref.current[temp.room].channels.push(temp);
     setChannels(ref.current[room.current.path].channels);
@@ -250,8 +294,17 @@ const Chat = (props) => {
     });
   };
 
-  const showNotifications = () => {
-    console.log('show notifications');
+  useEffect(() => {
+    console.log(users);
+  }, [users])
+
+  const showNotifications = async () => {
+    const notifications = await axios.get('/api/notifications');
+    notificationsRef.current = notifications.data;
+    setNotifications(notifications.data);
+    setDisplayNotifications((prevDisplayNotifications) => {
+      return !prevDisplayNotifications;
+    });
   };
 
   useEffect(() => {
@@ -259,10 +312,23 @@ const Chat = (props) => {
     // messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
   }, [conversation])
 
+  const updateNotification = async (notification, response) => {
+    const res = await axios.post('/api/update-notification', { notificationId: notification.id });
+    if (response === 'accept') {
+      const res = await axios.post('/api/join-room', { roomId: notification.room_id });
+      const room = await axios.post('/api/room', { roomId: notification.room_id });
+      history.current[room.data.path] = {};
+      ref.current[room.data.path] = { channels: [], users: {} };
+      setRooms((prevRooms) => {
+        return prevRooms.concat([room.data]);
+      });
+    }
+  };
+
   return (
     <div className={styles.chat}>
       <Rooms rooms={rooms} changeRoom={changeRoom} toggleForm={toggleForm} />
-      <Channels channels={channels} channel={channel} room={room} user={user} toggleForm={toggleForm} changeChannel={changeChannel} inviteFriends={inviteFriends} />
+      <Channels channels={channels} channel={channel} room={room} user={user} toggleForm={toggleForm} changeChannel={changeChannel} showNotifications={showNotifications} />
       <main className={styles.main}>
         <div className={styles.bar}># {channel.current ? channel.current.name : null }</div>
         <div className={styles.content}>
@@ -270,8 +336,8 @@ const Chat = (props) => {
           <Users users={users} />
         </div>
       </main>
-      {modal && <Modal toggleForm={toggleForm} addRoom={addRoom} addChannel={addChannel} modalRoomRef={modalRoomRef} modalChannelRef={modalChannelRef} modalForm={modalForm} />}
-      {notifications && <Notifications />}
+      {modal && <Modal toggleForm={toggleForm} addRoom={addRoom} addChannel={addChannel} modalRoomRef={modalRoomRef} modalChannelRef={modalChannelRef} modalFriendsRef={modalFriendsRef} modalForm={modalForm} sendInvite={sendInvite} />}
+      {displayNotifications && <Notifications notifications={notifications} showNotifications={showNotifications} updateNotification={updateNotification} />}
     </div>
   );
 };

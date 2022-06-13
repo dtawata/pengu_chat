@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "server": "nodemon server2.js"
+    "server": "nodemon server.js"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^6.1.1",

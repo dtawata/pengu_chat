@@ -65,6 +65,18 @@ CREATE TABLE joined_rooms (
   FOREIGN KEY(room_id) REFERENCES rooms(id)
 );
 
+-- CREATE TABLE notifications (
+--   id INT NOT NULL auto_increment,
+--   from_id INT NOT NULL,
+--   to_id INT NOT NULL,
+--   room_id INT NOT NULL,
+--   responded INT NOT NULL DEFAULT 0,
+--   PRIMARY KEY(id),
+--   FOREIGN KEY(from_id) REFERENCES users(id),
+--   FOREIGN KEY(to_id) REFERENCES users(id),
+--   FOREIGN KEY(room_id) REFERENCES rooms(id)
+-- );
+
 INSERT INTO rooms (name, path, image)
 VALUES ('RFP57', 'rfp57', '/img/default.jpg'),
 ('Philosophy', 'philosophy', '/img/idealism.jpg');
