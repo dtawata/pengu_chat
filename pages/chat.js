@@ -36,7 +36,7 @@ const Chat = (props) => {
   const notificationsRef = useRef([]);
 
   useEffect(() => {
-    const newSocket = io('https://ec2-3-83-111-216.compute-1.amazonaws.com', { autoConnect: false });
+    const newSocket = io('https://young-mesa-16987.herokuapp.com/', { autoConnect: false });
     setSocket(newSocket);
   }, [])
 
