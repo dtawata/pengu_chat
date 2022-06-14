@@ -36,7 +36,7 @@ const Chat = (props) => {
   const notificationsRef = useRef([]);
 
   useEffect(() => {
-    const newSocket = io('http://localhost:3001', { autoConnect: false });
+    const newSocket = io('ec2-3-83-111-216.compute-1.amazonaws.com:3000', { autoConnect: false });
     setSocket(newSocket);
   }, [])
 
