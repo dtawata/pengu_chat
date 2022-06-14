@@ -23,7 +23,7 @@ const Notification = (props) => {
 
   return (
     <Fragment>
-      {responded ? <div>hello</div> : <div className={styles.notification}>
+      {responded ? null : <div className={styles.notification}>
         <div>You&apos;re invited to join <span>{notification.room}</span> by {notification.username}.</div>
         <div className={styles.buttons}>
           <button onClick={() => { updateNotification(notification, 'accept'); setResponded(true); }} className={styles.button}>Accept</button>

@@ -42,7 +42,7 @@ const Users = (props) => {
 const OnlineUser = (props) => {
   const { onlineUser, changePrivateRoom } = props;
   return (
-    <div onClick={() => { changePrivateRoom(onlineUser) }} className={styles.online_user}>
+    <div className={styles.online_user}>
       <Image src={onlineUser.image} className={styles.image} alt='' width='30' height='30' />
       <div className={styles.name}>{onlineUser.username}</div>
     </div>
@@ -53,7 +53,7 @@ const OfflineUser = (props) => {
   const { offlineUser } = props;
 
   return (
-    <div onClick={() => { }} className={styles.online_user}>
+    <div className={styles.online_user}>
       <Image src={offlineUser.image} className={styles.image} alt='' width='30' height='30' />
       <div className={styles.name}>{offlineUser.username}</div>
     </div>
