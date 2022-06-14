@@ -43,6 +43,10 @@ const Chat = (props) => {
   useEffect(() => {
     if (socket) {
 
+      socket.on('message', (msg) => {
+        console.log('test', msg);
+      });
+
       socket.on('initialize', async ({ rooms, channels }) => {
 
         for (let room of rooms) {
