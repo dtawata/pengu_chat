@@ -14,9 +14,10 @@
 
 .bar {
   display: flex;
+  justify-content: space-between;
   align-items: center;
   height: 60px;
-  padding: 10px;
+  padding: 10px 25px;
   background-color: rgb(75, 75, 75);
   border-bottom: 2px solid #3A3A3A;
   font-size: 20px;

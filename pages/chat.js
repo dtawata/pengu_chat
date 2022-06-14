@@ -1,6 +1,6 @@
 import styles from '../styles/Chat.module.css';
 import { useState, useRef, useEffect } from 'react';
-import { getSession } from 'next-auth/react';
+import { getSession, signOut } from 'next-auth/react';
 import { io } from 'socket.io-client';
 import axios from 'axios';
 import { getUser } from '../lib/db';
@@ -322,7 +322,10 @@ const Chat = (props) => {
       <Rooms rooms={rooms} changeRoom={changeRoom} toggleForm={toggleForm} />
       <Channels channels={channels} channel={channel} room={room} user={user} toggleForm={toggleForm} changeChannel={changeChannel} showNotifications={showNotifications} />
       <main className={styles.main}>
-        <div className={styles.bar}># {channel.current ? channel.current.name : null }</div>
+        <div className={styles.bar}>
+          <div># {channel.current ? channel.current.name : null }</div>
+          <div onClick={signOut}>Sign Out</div>
+        </div>
         <div className={styles.content}>
           <Conversation conversation={conversation} socket={socket} room={room} channel={channel} messageRef={messageRef} isPrivate={isPrivate} messagesRef={messagesRef} />
           <Users users={users} />
