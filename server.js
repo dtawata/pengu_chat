@@ -36,7 +36,6 @@ io.on('connection', async (socket) => {
     socket.join(room.path);
   }
   const channels = await getChannels(roomIds);
-  console.log('channels', channels);
   socket.emit('initialize', { rooms, channels });
 
   // EVENT - getOnlineUsers // initializeOnlineUsers
@@ -77,12 +76,10 @@ io.on('connection', async (socket) => {
     const room = await getRoom({ userId: socket.userId, roomId: roomId});
     socket.join(room.path);
     const channels = await getChannels([room.id]);
-    console.log('join rooms', room)
     socket.emit('addRoom', { room, channels });
   });
 
   socket.on('invited', async ({ username, userId, room }) => {
-    console.log(userId, room);
     const user = await getUser(username);
     user.room = room;
     io.to(room).emit('invitedNewUser', user);
@@ -96,7 +93,6 @@ io.on('connection', async (socket) => {
     const userId = user.id;
     const add = await addNotification({ from, to: userId, room });
     const get = await getNotification(add.insertId);
-    console.log('get', get);
     io.to(toUsername).emit('receive_invite', get);
   });
 
@@ -258,7 +254,6 @@ io.on('connection', async (socket) => {
 
 
 // // // io.use((socket, next) => {
-// // //   console.log(socket.handshake);
 // // //   const username = socket.handshake.auth.username;
 // // //   if (!username) {
 // // //     return next(new Error("invalid username"));
@@ -288,7 +283,6 @@ io.on('connection', async (socket) => {
 // //   });
 
 // //   socket.on('privatemessage', (form) => {
-// //     console.log(socket.username);
 // //     socket.emit('receiving_pm', form.privateMessage);
 // //     socket.to(form.to).emit('receiving_pm', form.privateMessage);
 // //   })
@@ -296,7 +290,6 @@ io.on('connection', async (socket) => {
 // // });
 
 // // // io.on('connect', (socket) => {
-// // //   console.log(socket.id);
 // // //   socket.on('message', (msg) => {
 // // //     io.emit('everyone', { id: socket.username, msg });
 // // //   })

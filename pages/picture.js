@@ -6,7 +6,6 @@ const Picture = (props) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log(fileName.current.value);
   };
 
   return (

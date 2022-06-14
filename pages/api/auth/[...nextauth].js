@@ -29,7 +29,6 @@ export default NextAuth({
         //   const queryArgs = [credentials.email];
         //   const hashedPassword = await connection.promise().query(queryString, queryArgs);
         //   const verify = await verifyPassword(credentials.password, hashedPassword);
-        //   console.log(verify);
         //   const user = data[0][0];
         //   if (user) {
             // return {

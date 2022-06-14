@@ -7,7 +7,6 @@ const Handler = async (req, res) => {
     const email = session.user.email;
     const user = await getUser(email);
     const { notificationId } = req.body;
-    console.log(notificationId)
     const update = await updateNotification(notificationId);
     res.send();
   } catch(err) {

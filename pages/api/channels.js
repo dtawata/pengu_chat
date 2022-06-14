@@ -8,7 +8,6 @@ const Handler = async (req, res) => {
   const userId = user.id;
   const roomId = Number(req.query.roomId);
   const hasAccess = await getJoinedRoom({ userId, roomId });
-  console.log('has', hasAccess)
   if (hasAccess) {
     const channels = await getChannels(roomId);
     res.send(channels);

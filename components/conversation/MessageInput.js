@@ -9,7 +9,6 @@ const MessageInput = (props) => {
     if (isPrivate.current) {
       socket.emit('sending_private', { message, room: room.current });
     } else {
-      console.log('message sending', message, room.current, channel.current);
       socket.emit('sending', { message, room: room.current, channel: channel.current });
     }
   };

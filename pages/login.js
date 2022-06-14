@@ -18,7 +18,7 @@ const Login = (props) => {
     if (!result.error) {
       router.replace('/chat');
     } else {
-      console.log(result.error);
+      (result.error);
       setLoginError(result.error);
     }
   };

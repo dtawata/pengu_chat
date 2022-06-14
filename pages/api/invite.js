@@ -7,7 +7,6 @@ const Handler = async (req, res) => {
     const { username, roomId } = req.body;
     const user = await getUserId(username);
     const userId = user.id;
-    console.log(userId, roomId);
     const joinedRoom = await addJoinedRoom({ userId, roomId });
     res.send(userId);
   } catch(err) {

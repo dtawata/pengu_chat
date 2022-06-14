@@ -135,11 +135,9 @@ const Chat = (props) => {
       });
 
       socket.on('invitedNewUser', (user) => {
-        // console.log('nice', data);
         ref.current[room.current.path].users[user.username] = user;
         ref.current[room.current.path].users[user.username].online = false;
         setUsers(Object.values(ref.current[room.current.path].users));
-        console.log('invitednewuser', room.current);
         socket.emit('getOnlineUsersAgain', room.current);
       });
 
@@ -149,7 +147,6 @@ const Chat = (props) => {
       });
 
       socket.on('reInitializeOnlineUsers', (onlineUsers) => {
-        console.log('??!', onlineUsers);
         // for (let onlineUser of onlineUsers) {
         //   ref.current[room.current.path].users[onlineUser].online = true;
         // }
@@ -236,14 +233,9 @@ const Chat = (props) => {
     });
   };
 
-  useEffect(() => {
-    console.log('notifications', notifications);
-  }, [notifications])
-
   const sendInvite = async (e) => {
     e.preventDefault();
     // const temp = { username: modalFriendsRef.current.value, roomId: room.current.id };
-    // console.log(temp)
     // const res = await axios.post('/api/invite', temp);
     // const newUserId = res.data;
     // socket.emit('invited', { username: modalFriendsRef.current.value, userId: newUserId, room: room.current.path });
@@ -293,10 +285,6 @@ const Chat = (props) => {
       return !prevState;
     });
   };
-
-  useEffect(() => {
-    console.log(users);
-  }, [users])
 
   const showNotifications = async () => {
     const notifications = await axios.get('/api/notifications');
@@ -377,7 +365,6 @@ export const getServerSideProps = async (context) => {
   //     groups.current[data.channels[i].room].push(channels[i]);
   //   }
 
-  //   console.log('newroom', data);
   // })
 
   // socket.on('receiving', (data) => {
